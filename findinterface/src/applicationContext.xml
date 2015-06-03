@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:context="http://www.springframework.org/schema/context" xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:util="http://www.springframework.org/schema/util" xmlns:task="http://www.springframework.org/schema/task"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+	http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
+	http://www.springframework.org/schema/context
+	http://www.springframework.org/schema/context/spring-context-3.1.xsd
+	http://www.springframework.org/schema/tx
+	http://www.springframework.org/schema/tx/spring-tx-3.1.xsd
+	http://www.springframework.org/schema/util
+	http://www.springframework.org/schema/util/spring-util-3.1.xsd
+	http://www.springframework.org/schema/task
+	http://www.springframework.org/schema/task/spring-task-3.1.xsd">
+
+	<context:component-scan base-package="com.zkt.find">
+		<context:exclude-filter type="annotation"
+			expression="org.springframework.stereotype.Controller" />
+	</context:component-scan>
+
+	<!-- 本地环境 -->
+	<bean id="dataSource1" class="com.mchange.v2.c3p0.ComboPooledDataSource"
+		destroy-method="close">
+		<property name="driverClass" value="com.mysql.jdbc.Driver" />
+		<!-- jdbc:mysql://127.0.0.1:3306/zkyj?autoReconnect=true&amp;useUnicode=true&amp;characterEncoding=utf8 -->
+		<property name="jdbcUrl"
+			value="jdbc:mysql://127.0.0.1:3306/jsq" />
+			
+			<!-- <property name="jdbcUrl"
+			value="jdbc:oracle:thin:@192.168.30.10:1521:orclae" /> -->
+
+		<property name="user" value="root" />
+		<property name="password" value="root" />
+		<property name="minPoolSize" value="5" />
+		<property name="maxPoolSize" value="10" />
+	</bean>
+	<bean id="dataSource2" class="com.mchange.v2.c3p0.ComboPooledDataSource"
+		destroy-method="close">
+		<property name="driverClass" value="com.mysql.jdbc.Driver" />
+		<property name="jdbcUrl"
+			value="jdbc:mysql://127.0.0.1:3306/jsq" />
+		<!-- 	<property name="jdbcUrl"
+			value="jdbc:oracle:thin:@192.168.30.10:1521:orclae" /> -->
+
+		<property name="user" value="root" />
+		<property name="password" value="root" />
+		<property name="minPoolSize" value="5" />
+		<property name="maxPoolSize" value="20" />
+	</bean>
+
+	<bean id="jdbcTemplate1" class="org.springframework.jdbc.core.JdbcTemplate">
+		<constructor-arg ref="dataSource1" />
+	</bean>
+	<bean id="jdbcTemplate2" class="org.springframework.jdbc.core.JdbcTemplate">
+		<constructor-arg ref="dataSource2" />
+	</bean>
+
+	<bean id="transactionManager1"
+		class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="dataSource1" />
+	</bean>
+	<bean id="transactionManager2"
+		class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="dataSource2" />
+	</bean>
+	
+	<tx:annotation-driven transaction-manager="transactionManager1" />
+	<tx:annotation-driven transaction-manager="transactionManager2" />
+
+	<tx:annotation-driven />
+	
+	<!-- 文件无法下载问题主要是因为配置servlet配置文件中没能把ByteArrayHttpMessageConverter配上-->
+	<bean class="org.springframework.web.servlet.mvc.annotation.AnnotationMethodHandlerAdapter">
+        <property name="messageConverters">
+            <list>
+                <bean class="org.springframework.http.converter.ByteArrayHttpMessageConverter" />
+                <bean id="jsonHttpMessageConverter" class="org.springframework.http.converter.json.MappingJacksonHttpMessageConverter">
+                    <property name="supportedMediaTypes">
+                        <list>
+                            <value>text/plain;charset=UTF-8</value>
+                        </list>
+                    </property>
+                </bean>
+            </list>
+        </property>
+    </bean>
+
+	<!-- 配置异步执行器-->
+	<!-- <bean id="taskExecutor"
+		class="org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor">
+		核心线程数
+		<property name="corePoolSize" value="10" />
+		最大线程数
+		<property name="maxPoolSize" value="50" />
+		队列最大长度
+		<property name="queueCapacity" value="1000" />
+		线程池维护线程所允许的空闲时间，默认为60s
+		<property name="keepAliveSeconds" value="300" />
+		线程池对拒绝任务（无线程可用）的处理策略，目前只支持AbortPolicy、CallerRunsPolicy；默认为后者
+		<property name="rejectedExecutionHandler">
+			<bean class="java.util.concurrent.ThreadPoolExecutor$CallerRunsPolicy" />
+		</property>
+	</bean> -->
+
+	<!-- <task:scheduler id="scheduler" pool-size="10" />
+	<task:annotation-driven scheduler="scheduler" /> -->
+
+</beans>
